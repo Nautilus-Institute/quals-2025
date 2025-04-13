@@ -1,0 +1,9 @@
+# Ignoring macOS filesystem warts
+.DS_Store
+
+# Ignoring build artifacts
+/src/bin/
+/src/lib/
+/src/docs/
+/src/.shards/
+*.dwarf
