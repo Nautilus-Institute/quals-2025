@@ -74,7 +74,7 @@ Oh we almost forgot: our pet shop just moved!
 
 `flag{8_8_international_cat_day_751D5A377DE22F72D3CECD3D0715D6FE}`
 
-- The binary can be leaked by printing the `portal` binary as a pet picture to a registered printer.
+- The binary can be leaked by printing the `petshop` binary as a pet picture to a registered printer.
 - Reverse the leaked binary to retrieve the second flag.
 
 3. Flag 3 (`/flag_XXXXXXXXXXXX` where `XXXXXXXXXXXXX` is a random token, randomized for each connection)
