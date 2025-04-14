@@ -1,0 +1,52 @@
+@use "inline_list"
+@use "color"
+
+#dealt_in
+  ul#ticket_info, ul#deal_controls
+    @include inline_list.inline_list
+
+$card_width: 4rem
+$overlap: $card_width * 0.25
+
+ol#deck, ol#next_picker
+  @include inline_list.inline_list
+  margin: 1rem
+  padding-right: 4rem
+  li
+    margin: 0
+    margin-right: 0 - $overlap
+
+ol#deck 
+  li:last-child
+    figure.card img
+      transform: scale(120%) rotateZ(13deg) translateY(-0.25rem)
+      animation: none
+
+ol#next_picker button
+  border: none
+  background: transparent
+  cursor: pointer
+  &:hover
+    figure.card
+      img
+        transform: scale(120%) rotateZ(6deg) translateY(-0.25rem)
+        animation: none
+      figcaption
+        font-size: 1.5em
+        font-weight: bold
+
+figure.card
+  display: grid
+  width: $card_width
+  grid-template-rows: 1fr 1fr
+  grid-template-columns: $card_width
+  grid-template-areas: "img" "caption"
+  margin: 0
+  img
+    width: $card_width
+    height: auto
+    grid-area: img
+  figcaption
+    text-align: left
+    grid-area: caption
+ 

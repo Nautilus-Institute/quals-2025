@@ -1,0 +1,69 @@
+@use "color"
+
+@keyframes card1
+  0%
+    transform: rotate(-3deg)
+  100%
+    transform: rotate(5deg)
+
+@keyframes card2
+  0%
+    transform: rotate(7deg)
+  100%
+    transform: rotate(1deg)
+
+@keyframes card3
+  0%
+    transform: rotate(-5deg)
+  100%
+    transform: rotate(1deg)
+
+@keyframes card4
+  0%
+    transform: rotate(-6deg)
+  100%
+    transform: rotate(-1deg)
+
+@keyframes card5
+  0%
+    transform: rotate(3deg)
+  100%
+    transform: rotate(-3deg)
+
+body.gratuitous
+  background-image: linear-gradient(19deg, color.$green_velvet 25%, color.$barely_lighter_velvet 25%, color.$barely_lighter_velvet 50%, color.$green_velvet 50%, color.$green_velvet 75%, color.$barely_lighter_velvet 75%, color.$barely_lighter_velvet 100%)
+  background-size: 491.45px 169.22px 
+
+
+
+  $duration_base: 10s
+
+  figure.card img
+    animation-name: card1
+    animation-duration: $duration_base + 5
+    animation-direction: alternate
+    animation-iteration-count: infinite
+
+  @for $d from 1 through 10
+    figure.card-dn-#{$d} img
+     animation-name: card2
+     animation-duration: $duration_base + $d
+  @for $d from 11 through 20
+    figure.card-dn-#{$d} img
+      animation: card3
+      animation-duration: $duration_base + ($d - 10)
+  @for $d from 21 through 30
+    figure.card-dn-#{$d} img
+      animation: card4
+      animation-duration: $duration_base + ($d - 20)
+  @for $d from 31 through 40
+    figure.card-dn-#{$d} img
+      animation: card5
+      animation-duration: $duration_base + ($d - 30)
+  @for $d from 41 through 52
+    figure.card-dn-#{$d} img
+      animation-duration: $duration_base + ($d - 40)
+
+  @for $d from 1 through 26
+    figure.card-dn-#{$d * 2} img
+      animation-direction: alternate-reverse

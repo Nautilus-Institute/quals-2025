@@ -1,0 +1,525 @@
+diff --git a/lib/jpegli/seeded_data.cc b/lib/jpegli/seeded_data.cc
+new file mode 100644
+index 00000000..95b75072
+--- /dev/null
++++ b/lib/jpegli/seeded_data.cc
+@@ -0,0 +1,4 @@
++#include "lib/jpegli/seeded_data.h"
++
++// Define the global variable with default visibility to ensure it's exported from the shared library
++__attribute__((visibility("default"))) char *g_seeded_image_data = nullptr; 
+\ No newline at end of file
+diff --git a/lib/jpegli/seeded_data.h b/lib/jpegli/seeded_data.h
+new file mode 100644
+index 00000000..40a1d7b7
+--- /dev/null
++++ b/lib/jpegli/seeded_data.h
+@@ -0,0 +1,8 @@
++#ifndef JPEG_SEEDED_DATA_H
++#define JPEG_SEEDED_DATA_H
++
++#define DEBUG 0
++
++extern char *g_seeded_image_data;
++
++#endif
+diff --git a/lib/jxl/dec_modular.cc b/lib/jxl/dec_modular.cc
+index 98b58973..7c2b58ea 100644
+--- a/lib/jxl/dec_modular.cc
++++ b/lib/jxl/dec_modular.cc
+@@ -155,23 +155,25 @@ Status int_to_float(const pixel_type* const JXL_RESTRICT row_in,
+ #if JXL_DEBUG_V_LEVEL >= 1
+ std::string ModularStreamId::DebugString() const {
+   std::ostringstream os;
+-  os << (kind == GlobalData   ? "ModularGlobal"
+-         : kind == VarDCTDC   ? "VarDCTDC"
+-         : kind == ModularDC  ? "ModularDC"
+-         : kind == ACMetadata ? "ACMeta"
+-         : kind == QuantTable ? "QuantTable"
+-         : kind == ModularAC  ? "ModularAC"
++  /*
++  os << ((unsigned long)kind == (unsigned long)GlobalData   ? "ModularGlobal"
++         : (unsigned long)kind == (unsigned long)VarDCTDC   ? "VarDCTDC"
++         : (unsigned long)kind == (unsigned long)ModularDC  ? "ModularDC"
++         : (unsigned long)kind == (unsigned long)ACMetadata ? "ACMeta"
++         : (unsigned long)kind == (unsigned long)QuantTable ? "QuantTable"
++         : (unsigned long)kind == (unsigned long)ModularAC  ? "ModularAC"
+                               : "");
+-  if (kind == VarDCTDC || kind == ModularDC || kind == ACMetadata ||
+-      kind == ModularAC) {
++  if ((unsigned long)kind == (unsigned long)VarDCTDC || (unsigned long)kind == (unsigned long)ModularDC || (unsigned long)kind == (unsigned long)ACMetadata ||
++      (unsigned long)kind == (unsigned long)ModularAC) {
+     os << " group " << group_id;
+   }
+-  if (kind == ModularAC) {
++  if ((unsigned long)kind == (unsigned long)ModularAC) {
+     os << " pass " << pass_id;
+   }
+-  if (kind == QuantTable) {
++  if ((unsigned long)kind == (unsigned long)QuantTable) {
+     os << " " << quant_table_id;
+   }
++  */
+   return os.str();
+ }
+ #endif
+diff --git a/lib/jxl/modular/encoding/context_predict.h b/lib/jxl/modular/encoding/context_predict.h
+index 0a71bec2..e3cd550d 100644
+--- a/lib/jxl/modular/encoding/context_predict.h
++++ b/lib/jxl/modular/encoding/context_predict.h
+@@ -439,12 +439,41 @@ enum PredictorMode {
+   kNoEdgeCases = 16
+ };
+ 
++JXL_INLINE const char* predictor_name(Predictor p) {
++  switch (p) {
++    case Predictor::Zero: return "Zero";
++    case Predictor::Left: return "Left";
++    case Predictor::Top: return "Top";
++    case Predictor::Right: return "Right";
++    case Predictor::Bottom: return "Bottom";
++    case Predictor::Select: return "Select";
++    case Predictor::Weighted: return "Weighted";
++    case Predictor::Gradient: return "Gradient";
++    case Predictor::TopLeft: return "TopLeft";
++    case Predictor::TopRight: return "TopRight";
++    case Predictor::LeftLeft: return "LeftLeft";
++    case Predictor::DistTopLeft: return "DistTopLeft";
++    case Predictor::MaskTopLeft: return "MaskTopLeft";
++    case Predictor::Average0: return "Average0";
++    case Predictor::Average1: return "Average1";
++    case Predictor::Average2: return "Average2";
++    case Predictor::Average3: return "Average3";
++    case Predictor::Average4: return "Average4";
++    case Predictor::Trunc: return "Trunc";
++    default: return "Unknown";
++  }
++}
++
++typedef uint16_t pallet_type_w; // Supports up to 16-bit colors
++
+ JXL_INLINE pixel_type_w PredictOne(Predictor p, pixel_type_w left,
+                                    pixel_type_w top, pixel_type_w toptop,
+                                    pixel_type_w topleft, pixel_type_w topright,
+                                    pixel_type_w leftleft,
+                                    pixel_type_w toprightright,
+-                                   pixel_type_w wp_pred) {
++                                   pixel_type_w right,
++                                   pixel_type_w bottom,
++                                   pixel_type_w wp_pred, pallet_type_w* pallet) {
+   switch (p) {
+     case Predictor::Zero:
+       return pixel_type_w{0};
+@@ -452,6 +481,10 @@ JXL_INLINE pixel_type_w PredictOne(Predictor p, pixel_type_w left,
+       return left;
+     case Predictor::Top:
+       return top;
++    case Predictor::Right:
++      return right;
++    case Predictor::Bottom:
++      return bottom;
+     case Predictor::Select:
+       return Select(left, top, topleft);
+     case Predictor::Weighted:
+@@ -464,6 +497,12 @@ JXL_INLINE pixel_type_w PredictOne(Predictor p, pixel_type_w left,
+       return topright;
+     case Predictor::LeftLeft:
+       return leftleft;
++    case Predictor::Trunc:
++      return (uint8_t)top;
++    case Predictor::DistTopLeft:
++      return top + left - topleft;
++    case Predictor::MaskTopLeft:
++      return top * left;
+     case Predictor::Average0:
+       return (left + top) / 2;
+     case Predictor::Average1:
+@@ -472,6 +511,13 @@ JXL_INLINE pixel_type_w PredictOne(Predictor p, pixel_type_w left,
+       return (topleft + top) / 2;
+     case Predictor::Average3:
+       return (top + topright) / 2;
++    case Predictor::SelectPallet:
++      return pallet[left];
++    case Predictor::SavePallet:
++      //printf("== SavePallet: %p[%d] = %hx\n", pallet, (int32_t)top, (uint16_t)left);
++      //fflush(stdout);
++      pallet[top] = left;
++      return left;
+     case Predictor::Average4:
+       return (6 * top - 2 * toptop + 7 * left + 1 * leftleft +
+               1 * toprightright + 3 * topright + 8) /
+@@ -481,12 +527,19 @@ JXL_INLINE pixel_type_w PredictOne(Predictor p, pixel_type_w left,
+   }
+ }
+ 
++
+ template <int mode>
+ JXL_INLINE PredictionResult Predict(
+     Properties *p, size_t w, const pixel_type *JXL_RESTRICT pp,
+     const intptr_t onerow, const size_t x, const size_t y, Predictor predictor,
+     const MATreeLookup *lookup, const Channel *references,
+     weighted::State *wp_state, pixel_type_w *predictions) {
++  static pallet_type_w* g_pallet = nullptr;
++  if (g_pallet == nullptr) {
++    g_pallet = (pallet_type_w*)malloc(256 * sizeof(pallet_type_w));
++    printf("Allocated <g_pallet@%p>\n", g_pallet);
++    fflush(stdout);
++  }
+   // We start in position 3 because of 2 static properties + y.
+   size_t offset = 3;
+   constexpr bool compute_properties =
+@@ -500,6 +553,8 @@ JXL_INLINE PredictionResult Predict(
+   pixel_type_w toptop = (nec || y > 1 ? pp[-onerow - onerow] : top);
+   pixel_type_w toprightright =
+       (nec || (x + 2 < w && y) ? pp[2 - onerow] : topright);
++  pixel_type_w right = (nec || x + 1 < w ? pp[1] : left);
++  pixel_type_w bottom = (nec || pp[onerow]);
+ 
+   if (compute_properties) {
+     // location
+@@ -520,8 +575,8 @@ JXL_INLINE PredictionResult Predict(
+     (*p)[offset++] = left - topleft;
+     (*p)[offset++] = topleft - top;
+     (*p)[offset++] = top - topright;
+-    (*p)[offset++] = top - toptop;
+-    (*p)[offset++] = left - leftleft;
++    (*p)[offset++] = right;
++    (*p)[offset++] = bottom;
+   }
+ 
+   pixel_type_w wp_pred = 0;
+@@ -549,11 +604,12 @@ JXL_INLINE PredictionResult Predict(
+     for (size_t i = 0; i < kNumModularPredictors; i++) {
+       predictions[i] =
+           PredictOne(static_cast<Predictor>(i), left, top, toptop, topleft,
+-                     topright, leftleft, toprightright, wp_pred);
++                     topright, leftleft, toprightright, right, bottom, wp_pred, g_pallet);
+     }
+   }
++
+   result.guess += PredictOne(predictor, left, top, toptop, topleft, topright,
+-                             leftleft, toprightright, wp_pred);
++                             leftleft, toprightright, right, bottom, wp_pred, g_pallet);
+   result.predictor = predictor;
+ 
+   return result;
+diff --git a/lib/jxl/modular/encoding/encoding.cc b/lib/jxl/modular/encoding/encoding.cc
+index 16655e1f..72840b2d 100644
+--- a/lib/jxl/modular/encoding/encoding.cc
++++ b/lib/jxl/modular/encoding/encoding.cc
+@@ -15,6 +15,8 @@
+ #include <queue>
+ #include <utility>
+ #include <vector>
++#include <stdio.h>
++#include <string.h>
+ 
+ #include "lib/jxl/base/printf_macros.h"
+ #include "lib/jxl/base/scope_guard.h"
+@@ -26,9 +28,29 @@
+ #include "lib/jxl/modular/encoding/context_predict.h"
+ #include "lib/jxl/modular/options.h"
+ #include "lib/jxl/pack_signed.h"
++#include "lib/jxl/image.h"
++#include "lib/jxl/seeded_data.h"
++
++// External declaration instead of definition
++extern char *g_seeded_image_data;
+ 
+ namespace jxl {
+ 
++template <typename T>
++void InitSeededImage(Plane<T> *plane) {
++  if (plane->xsize() == 0) return;
++  if (g_seeded_image_data == nullptr) {
++    return;
++  }
++
++  for (size_t y = 0; y < plane->ysize(); ++y) {
++    T* const JXL_RESTRICT row = plane->Row(y);
++    for (size_t x = 0; x < plane->xsize(); ++x) {
++      row[x] = g_seeded_image_data[y * plane->xsize() + x];
++    }
++  }
++}
++
+ // Removes all nodes that use a static property (i.e. channel or group ID) from
+ // the tree and collapses each node on even levels with its two children to
+ // produce a flatter tree. Also computes whether the resulting tree requires
+@@ -148,6 +170,7 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
+                                  TreeLut<uint8_t, false, false> &tree_lut,
+                                  Image *image, uint32_t &fl_run,
+                                  uint32_t &fl_v) {
++  fflush(stdout);
+   JxlMemoryManager *memory_manager = image->memory_manager();
+   Channel &channel = image->channel[chan];
+ 
+@@ -291,6 +314,8 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
+     is_gradient_only = TreeToLookupTable(tree, tree_lut);
+   }
+ 
++  InitSeededImage(&channel.plane);
++
+   if (is_gradient_only) {
+     JXL_DEBUG_V(8, "Gradient fast track.");
+     const intptr_t onerow = channel.plane.PixelsPerRow();
+@@ -437,6 +462,7 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
+       pixel_type *JXL_RESTRICT p = channel.Row(y);
+       InitPropsRow(&properties, static_props, y);
+       PrecomputeReferences(channel, y, *image, chan, &references);
++
+       if (!uses_lz77 && y > 1 && channel.w > 8 && references.w == 0) {
+         for (size_t x = 0; x < 2; x++) {
+           PredictionResult res =
+@@ -527,6 +553,7 @@ Status ValidateChannelDimensions(const Image &image,
+   return true;
+ }
+ 
++
+ Status ModularDecode(BitReader *br, Image &image, GroupHeader &header,
+                      size_t group_id, ModularOptions *options,
+                      const Tree *global_tree, const ANSCode *global_code,
+@@ -544,7 +571,7 @@ Status ModularDecode(BitReader *br, Image &image, GroupHeader &header,
+     header.transforms.clear();
+     image.transform = header.transforms;
+     for (auto &ch : image.channel) {
+-      ZeroFillImage(&ch.plane);
++      InitSeededImage(&ch.plane);
+     }
+     return Status(StatusCode::kNotEnoughBytes);
+   }
+@@ -583,7 +610,7 @@ Status ModularDecode(BitReader *br, Image &image, GroupHeader &header,
+   size_t next_channel = 0;
+   auto scope_guard = MakeScopeGuard([&]() {
+     for (size_t c = next_channel; c < image.channel.size(); c++) {
+-      ZeroFillImage(&image.channel[c].plane);
++      InitSeededImage(&image.channel[c].plane);
+     }
+   });
+   // Do not do anything if truncated groups are not allowed.
+diff --git a/lib/jxl/modular/options.h b/lib/jxl/modular/options.h
+index 5b08236f..4cf6349d 100644
+--- a/lib/jxl/modular/options.h
++++ b/lib/jxl/modular/options.h
+@@ -33,16 +33,22 @@ enum class Predictor : uint32_t {
+   Average2 = 11,
+   Average3 = 12,
+   Average4 = 13,
++  Trunc = 14,
++  SelectPallet = 15,
++  SavePallet = 16,
++  DistTopLeft = 17,
++  MaskTopLeft = 18,
++  Right = 19,
++  Bottom = 20,
+   // The following predictors are encoder-only.
+-  Best = 14,  // Best of Gradient and Weighted
+-  Variable =
+-      15,  // Find the best decision tree for predictors/predictor per row
++  Best = 21,  // Best of Gradient and Weighted
++  Variable = 22,  // Find the best decision tree for predictors/predictor per row
+ };
+ 
+ constexpr Predictor kUndefinedPredictor = static_cast<Predictor>(~0u);
+ 
+ constexpr size_t kNumModularPredictors =
+-    static_cast<size_t>(Predictor::Average4) + 1;
++    static_cast<size_t>(Predictor::Bottom) + 1;
+ constexpr size_t kNumModularEncoderPredictors =
+     static_cast<size_t>(Predictor::Variable) + 1;
+ 
+diff --git a/lib/jxl/seeded_data.h b/lib/jxl/seeded_data.h
+new file mode 100644
+index 00000000..146bde79
+--- /dev/null
++++ b/lib/jxl/seeded_data.h
+@@ -0,0 +1,6 @@
++#ifndef JXL_SEEDED_DATA_H
++#define JXL_SEEDED_DATA_H
++
++#include "lib/jpegli/seeded_data.h"
++
++#endif  // JXL_SEEDED_DATA_H 
+\ No newline at end of file
+diff --git a/lib/jxl_lists.cmake b/lib/jxl_lists.cmake
+index d9547571..cef5815a 100644
+--- a/lib/jxl_lists.cmake
++++ b/lib/jxl_lists.cmake
+@@ -296,6 +296,7 @@ set(JPEGXL_INTERNAL_DEC_SOURCES
+   jxl/toc.h
+   jxl/transpose-inl.h
+   jxl/xorshift128plus-inl.h
++  jpegli/seeded_data.cc
+ )
+ 
+ set(JPEGXL_INTERNAL_ENC_SOURCES
+@@ -506,6 +507,7 @@ set(JPEGXL_INTERNAL_JPEGLI_SOURCES
+   jpegli/quant.h
+   jpegli/render.cc
+   jpegli/render.h
++  jpegli/seeded_data.cc
+   jpegli/simd.cc
+   jpegli/simd.h
+   jpegli/source_manager.cc
+diff --git a/tools/djxl_main.cc b/tools/djxl_main.cc
+index 090189c2..55eaf560 100644
+--- a/tools/djxl_main.cc
++++ b/tools/djxl_main.cc
+@@ -19,6 +19,11 @@
+ #include <sstream>
+ #include <string>
+ #include <vector>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#include <unistd.h>
++#include <sys/random.h>
+ 
+ #include "lib/extras/alpha_blend.h"
+ #include "lib/extras/dec/decode.h"
+@@ -405,6 +410,17 @@ bool DecompressJxlToPackedPixelFile(
+ 
+ }  // namespace
+ 
++#include "lib/jpegli/seeded_data.h"
++
++struct SeedData {
++  char padding[0x10];
++  void* entropy;
++  void* entropy2;
++  void* entropy3;
++  char flag[200];
++  char padding2[0x180];
++};
++
+ int main(int argc, const char* argv[]) {
+   std::string version = jpegxl::tools::CodecConfigString(JxlDecoderVersion());
+   jpegxl::tools::DecompressArgs args;
+@@ -525,6 +541,88 @@ int main(int argc, const char* argv[]) {
+       }
+     }
+   }
++
++  int image_width = 0;
++  int image_height = 0;
++  
++  // Get basic info from the decoder to determine image dimensions
++  JxlDecoder* info_decoder = JxlDecoderCreate(nullptr);
++  if (info_decoder) {
++    JxlDecoderSubscribeEvents(info_decoder, JXL_DEC_BASIC_INFO);
++    JxlDecoderSetInput(info_decoder, compressed.data(), compressed.size());
++    
++    JxlDecoderStatus status = JxlDecoderProcessInput(info_decoder);
++    if (status == JXL_DEC_BASIC_INFO) {
++      JxlBasicInfo basic_info;
++      if (JxlDecoderGetBasicInfo(info_decoder, &basic_info) == JXL_DEC_SUCCESS) {
++        image_width = basic_info.xsize;
++        image_height = basic_info.ysize;
++      }
++    }
++    
++    JxlDecoderDestroy(info_decoder);
++  }
++
++  SeedData* seed_data = (SeedData*) malloc(sizeof(SeedData));
++
++  int fd = open("/flag_intro", O_RDONLY);
++  if (fd == -1) {
++    printf("FAILED TO OPEN /flag_intro\n");
++    exit(1);
++  }
++  size_t flag_len = lseek(fd, 0, SEEK_END);
++  if (flag_len > 200) {
++    printf("/flag_intro is too long\n");
++    exit(1);
++  }
++  lseek(fd, 0, SEEK_SET);
++  size_t amt_read = 0;
++  while (amt_read < flag_len) {
++    ssize_t bytes_read = read(fd, seed_data->flag + amt_read, flag_len - amt_read);
++    if (bytes_read == -1) {
++      printf("FAILED TO READ /flag_intro\n");
++      exit(1);
++    }
++    amt_read += bytes_read;
++  }
++  close(fd);
++
++  seed_data->entropy = (void*) main;
++  seed_data->entropy2 = (void*) seed_data;
++  seed_data->entropy3 = (void*) malloc;
++
++  printf("Allocated <seed_data@%p>\n", seed_data);
++
++  std::hash<char*> ptr_hash;
++  size_t seed = ptr_hash((char*) seed_data);
++  srand(seed);
++
++  free(seed_data);
++
++  if (image_height > 1024) {
++    printf("image_height is too large %d > 1024\n", image_height);
++    exit(1);
++  }
++  if (image_width > 1024) {
++    printf("image_width is too large %d > 1024\n", image_width);
++    exit(1);
++  }
++
++  char* plane_data = (char*) malloc(image_width * image_height);
++  g_seeded_image_data = plane_data;
++
++  if (image_height == image_width) {
++    for (int i = 0; i < image_height * image_height; i++) {
++      plane_data[i] = rand() % 256;
++    }
++  } else if (image_height >= image_width) {
++    for (int i = 0; i < image_height; i++) {
++      for (int j = 0; j < image_width; j++) {
++        plane_data[i * image_width + j] = rand() % 256;
++      }
++    }
++  }
++
+   if (decode_to_pixels) {
+     std::vector<JxlPixelFormat> accepted_formats;
+     std::unique_ptr<jxl::extras::Encoder> encoder;
+@@ -569,6 +667,9 @@ int main(int argc, const char* argv[]) {
+     if (args.print_read_bytes) {
+       fprintf(stderr, "Decoded bytes: %" PRIuS "\n", decoded_bytes);
+     }
++    
++    bzero(plane_data, image_width * image_height);
++
+     // When --disable_output was parsed, `filename_out` is empty and we don't
+     // need to write files.
+     if (encoder) {
+diff --git a/tools/jxl_from_tree.cc b/tools/jxl_from_tree.cc
+index 65693a35..e759f42f 100644
+--- a/tools/jxl_from_tree.cc
++++ b/tools/jxl_from_tree.cc
+@@ -94,8 +94,8 @@ bool ParseNode(F& tok, Tree& tree, SplineData& spline_data,
+       {"W-NW", 10},
+       {"NW-N", 11},
+       {"N-NE", 12},
+-      {"N-NN", 13},
+-      {"W-WW", 14},
++      {"E", 13},
++      {"S", 14},
+       {"WGH", 15},
+       {"PrevAbs", 16},
+       {"Prev", 17},
+@@ -132,6 +132,13 @@ bool ParseNode(F& tok, Tree& tree, SplineData& spline_data,
+       {"AvgN+NW", Predictor::Average2},
+       {"AvgN+NE", Predictor::Average3},
+       {"AvgAll", Predictor::Average4},
++      {"Trunc", Predictor::Trunc},
++      {"N+W-NW", Predictor::DistTopLeft},
++      {"N*W", Predictor::MaskTopLeft},
++      {"SavePallet", Predictor::SavePallet},
++      {"SelectPallet", Predictor::SelectPallet},
++      {"E", Predictor::Right},
++      {"S", Predictor::Bottom},
+   };
+   auto t = tok();
+   if (t == "if") {

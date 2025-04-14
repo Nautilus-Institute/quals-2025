@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<job>
+  <name>ownershipcheck</name>
+  <script>
+#!/bin/bash
+echo "Validating code ownership rules..."
+
+if [ -z "$REPO_ROOT" ]; then
+  echo "ERROR: REPO_ROOT environment variable is not set."
+  exit 1
+fi
+
+if [ ! -d "$REPO_ROOT" ]; then
+  echo "ERROR: REPO_ROOT is not a valid directory."
+  exit 1
+fi
+
+REPO_ROOT="$(realpath "$REPO_ROOT")"
+
+cd "$REPO_ROOT"
+PR_AUTHOR="$(git log -1 --pretty=format:'%an')"
+echo "PR_AUTHOR: $PR_AUTHOR"
+echo "Checking ownership for author: $PR_AUTHOR"
+
+CODEOWNERS_FILE=""
+
+if [ -f "$REPO_ROOT/CODEOWNERS" ]; then
+  CODEOWNERS_FILE="$REPO_ROOT/CODEOWNERS"
+elif [ -f "$REPO_ROOT/.github/CODEOWNERS" ]; then
+  CODEOWNERS_FILE="$REPO_ROOT/.github/CODEOWNERS"
+elif [ -f "$REPO_ROOT/docs/CODEOWNERS" ]; then
+  CODEOWNERS_FILE="$REPO_ROOT/docs/CODEOWNERS"
+fi
+
+if [ -z "$CODEOWNERS_FILE" ]; then
+  echo "ERROR: No CODEOWNERS file found"
+  echo "Please add a CODEOWNERS file to define ownership rules"
+  echo "reject" | tee /pr-status/status
+  exit 1
+fi
+
+echo "Found CODEOWNERS file at ${CODEOWNERS_FILE#$REPO_ROOT/}"
+
+echo 'Code ownership check passed for {%= app_name %}'
+  </script>
+  <env>
+    <var name="ENVIRONMENT">production</var>
+  </env>
+  <input name="app_name" />
+  <output name="app_url" />
+</job> 

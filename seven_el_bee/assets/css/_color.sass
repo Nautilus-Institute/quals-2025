@@ -1,0 +1,25 @@
+@use 'sass:color' as sc 
+  
+$offgrey: #e8f0f4
+$offgrey_tiger: #f4f8f8
+
+$background: #f4f4f8
+$foreground: #002040
+
+$green: #A1CC41
+$pink: #EB759C
+$blue: #51D1C8
+
+$green_velvet: #1E3D2F
+$gold: #FFD700
+
+$barely_lighter_velvet: sc.scale($green_velvet, $lightness: +4%)
+$lighter_velvet: sc.scale($green_velvet, $lightness: +10%)
+$mild_gold: sc.scale($gold, $lightness: +10%, $saturation: -50%)
+
+$background: $green_velvet
+$foreground: $mild_gold
+
+body
+  background: $background
+  color: $foreground

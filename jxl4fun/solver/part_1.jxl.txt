@@ -1,0 +1,7 @@
+Width 312
+Height 2
+Bitdepth 8
+
+if x > 2000
+- Weighted 2
+- E 0

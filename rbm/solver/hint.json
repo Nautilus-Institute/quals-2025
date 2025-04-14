@@ -1,0 +1,10 @@
+{
+  "index": 1576,
+  "src": "bool palindrome1577(const std::string &provided) {\n  if (!palindrome::is_palindrome(provided)) {\n    return false;\n  }\n\n  const std::size_t arr_size = 58;\n  uint64_t target = 0;\n  std::array<char, arr_size> arr;\n  uint64_t wanted = 0x3447784339354946;\n  std::size_t to_copy = std::min(provided.size(), arr_size + 8);\n\n  memcpy(arr.data(), provided.data(), to_copy);\n\n  std::cerr << \"target: \" << std::hex << target << std::endl;\n  std::cerr << \"wanted: \" << std::hex << wanted << std::endl;\n\n  return target == wanted;\n}\n",
+  "name": "palindrome1577",
+  "arr_size": 58,
+  "wanted": "4GxC95IF",
+  "padding": 8,
+  "target": "QthmlOww",
+  "payload": "4GxC95IFaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaFI59CxG4"
+}

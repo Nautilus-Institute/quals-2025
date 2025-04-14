@@ -1,0 +1,195 @@
+[1mdiff --git a/crypto/chacha/chacha_enc.c b/crypto/chacha/chacha_enc.c[m
+[1mindex f6fbc11988..72860ca94c 100644[m
+[1m--- a/crypto/chacha/chacha_enc.c[m
+[1m+++ b/crypto/chacha/chacha_enc.c[m
+[36m@@ -58,6 +58,7 @@[m [mtypedef union {[m
+                 x[a] += x[b], x[d] = ROTATE((x[d] ^ x[a]),16), \[m
+                 x[c] += x[d], x[b] = ROTATE((x[b] ^ x[c]),12), \[m
+                 x[a] += x[b], x[d] = ROTATE((x[d] ^ x[a]), 8), \[m
+[32m+[m[32m                x[a] += x[b], x[d] = ROTATE((x[d] ^ x[a]), 3), \[m
+                 x[c] += x[d], x[b] = ROTATE((x[b] ^ x[c]), 7)  )[m
+ [m
+ /* chacha_core performs 20 rounds of ChaCha on the input words in[m
+[36m@@ -79,6 +80,8 @@[m [mstatic void chacha20_core(chacha_buf *output, const u32 input[16])[m
+         QUARTERROUND(1, 6, 11, 12);[m
+         QUARTERROUND(2, 7, 8, 13);[m
+         QUARTERROUND(3, 4, 9, 14);[m
+[32m+[m[32m        QUARTERROUND(0, 5, 10, 15);[m
+[32m+[m[32m        QUARTERROUND(3, 4, 9, 14);[m
+     }[m
+ [m
+     if (IS_LITTLE_ENDIAN) {[m
+[1mdiff --git a/crypto/err/err_blocks.c b/crypto/err/err_blocks.c[m
+[1mindex a658df0576..19fc4325d9 100644[m
+[1m--- a/crypto/err/err_blocks.c[m
+[1m+++ b/crypto/err/err_blocks.c[m
+[36m@@ -25,9 +25,26 @@[m [mvoid ERR_new(void)[m
+     err_get_slot(es);[m
+     err_clear(es, es->top, 0);[m
+ }[m
+[31m-[m
+[31m-void ERR_set_debug(const char *file, int line, const char *func)[m
+[32m+[m[32mvoid ERR_set_debug(const char *file __attribute__((unused)), int line __attribute__((unused)), const char *func __attribute__((unused)))[m
+ {[m
+[32m+[m[41m    [m
+[32m+[m[41m    [m
+[32m+[m[32m}[m
+[32m+[m[32m/*[m
+[32m+[m[32mvoid ERR_set_error(int lib __attribute__((unused)), int reason __attribute__((unused)),[m[41m [m
+[32m+[m[32m    const char *fmt __attribute__((unused)), ... )[m
+[32m+[m[32m{[m
+[32m+[m[41m    [m
+[32m+[m[41m    [m
+[32m+[m[32m}[m
+[32m+[m[32m*/[m
+[32m+[m
+[32m+[m
+[32m+[m[32m/*[m
+[32m+[m[32mvoid ERR_set_debug(const char *file ,[m
+[32m+[m[32m int line ,[m[41m [m
+[32m+[m[32m const char *func )[m
+[32m+[m[32m{[m[41m [m
+     ERR_STATE *es;[m
+ [m
+     es = ossl_err_get_state_int();[m
+[36m@@ -35,10 +52,13 @@[m [mvoid ERR_set_debug(const char *file, int line, const char *func)[m
+         return;[m
+ [m
+     err_set_debug(es, es->top, file, line, func);[m
+[32m+[m[41m    [m
+ }[m
+[31m-[m
+[31m-void ERR_set_error(int lib, int reason, const char *fmt, ...)[m
+[32m+[m[32m*/[m
+[32m+[m[32mvoid ERR_set_error(int lib , int reason ,[m[41m [m
+[32m+[m[32m    const char *fmt , ... )[m
+ {[m
+[32m+[m[41m    [m
+     va_list args;[m
+ [m
+     va_start(args, fmt);[m
+[36m@@ -46,6 +66,7 @@[m [mvoid ERR_set_error(int lib, int reason, const char *fmt, ...)[m
+     va_end(args);[m
+ }[m
+ [m
+[32m+[m
+ void ERR_vset_error(int lib, int reason, const char *fmt, va_list args)[m
+ {[m
+     ERR_STATE *es;[m
+[1mdiff --git a/crypto/evp/digest.c b/crypto/evp/digest.c[m
+[1mindex 6fc201bcfe..aff6a5bfbe 100644[m
+[1m--- a/crypto/evp/digest.c[m
+[1m+++ b/crypto/evp/digest.c[m
+[36m@@ -154,6 +154,10 @@[m [mint evp_md_ctx_free_algctx(EVP_MD_CTX *ctx)[m
+     return 1;[m
+ }[m
+ [m
+[32m+[m[32mvoid * evp_md_get_alg_ctx(EVP_MD_CTX *ctx)[m
+[32m+[m[32m{[m
+[32m+[m[32m    return ctx->algctx;[m
+[32m+[m[32m}[m
+ static int evp_md_init_internal(EVP_MD_CTX *ctx, const EVP_MD *type,[m
+                                 const OSSL_PARAM params[], ENGINE *impl)[m
+ {[m
+[1mdiff --git a/crypto/sm3/asm/sm3-x86_64.pl b/crypto/sm3/asm/sm3-x86_64.pl[m
+[1mindex 8025203551..f43261a08a 100755[m
+[1m--- a/crypto/sm3/asm/sm3-x86_64.pl[m
+[1m+++ b/crypto/sm3/asm/sm3-x86_64.pl[m
+[36m@@ -234,7 +234,7 @@[m [m$code.=<<___;[m
+     # store the hash value back in memory[m
+     vpslld          \$9, %xmm7, %xmm2[m
+     vpsrld          \$23, %xmm7, %xmm3[m
+[31m-    vpxor           %xmm3, %xmm2, %xmm1[m
+[32m+[m[32m    vpxor           %xmm3, %xmm1, %xmm2[m
+     vpslld          \$19, %xmm7, %xmm4[m
+     vpsrld          \$13, %xmm7, %xmm5[m
+     vpxor           %xmm5, %xmm4, %xmm0[m
+[1mdiff --git a/crypto/sm3/sm3.c b/crypto/sm3/sm3.c[m
+[1mindex ff78fb763e..92daaaad00 100644[m
+[1m--- a/crypto/sm3/sm3.c[m
+[1m+++ b/crypto/sm3/sm3.c[m
+[36m@@ -15,11 +15,11 @@[m
+ int ossl_sm3_init(SM3_CTX *c)[m
+ {[m
+     memset(c, 0, sizeof(*c));[m
+[31m-    c->A = SM3_A;[m
+[32m+[m[32m    c->A = SM3_E;[m
+     c->B = SM3_B;[m
+     c->C = SM3_C;[m
+     c->D = SM3_D;[m
+[31m-    c->E = SM3_E;[m
+[32m+[m[32m    c->E = SM3_A;[m
+     c->F = SM3_F;[m
+     c->G = SM3_G;[m
+     c->H = SM3_H;[m
+[36m@@ -170,6 +170,7 @@[m [mvoid ossl_sm3_block_data_order(SM3_CTX *ctx, const void *p, size_t num)[m
+         W02 = EXPAND(W02, W09, W15, W05, W12);[m
+         R2(B, C, D, A, F, G, H, E, 0xEC53D43C, W03, W03 ^ W07);[m
+         W03 = EXPAND(W03, W10, W00, W06, W13);[m
+[32m+[m[32m        R2(B, C, D, A, F, G, H, E, 0x3D43CEC5, W15, W15 ^ W03);[m
+         R2(A, B, C, D, E, F, G, H, 0xD8A7A879, W04, W04 ^ W08);[m
+         R2(D, A, B, C, H, E, F, G, 0xB14F50F3, W05, W05 ^ W09);[m
+         R2(C, D, A, B, G, H, E, F, 0x629EA1E7, W06, W06 ^ W10);[m
+[36m@@ -180,6 +181,7 @@[m [mvoid ossl_sm3_block_data_order(SM3_CTX *ctx, const void *p, size_t num)[m
+         R2(B, C, D, A, F, G, H, E, 0x53D43CEC, W11, W11 ^ W15);[m
+         R2(A, B, C, D, E, F, G, H, 0xA7A879D8, W12, W12 ^ W00);[m
+         R2(D, A, B, C, H, E, F, G, 0x4F50F3B1, W13, W13 ^ W01);[m
+[32m+[m[32m        R2(B, C, D, A, F, G, H, E, 0x3D43CEC5, W15, W15 ^ W03);[m
+         R2(C, D, A, B, G, H, E, F, 0x9EA1E762, W14, W14 ^ W02);[m
+         R2(B, C, D, A, F, G, H, E, 0x3D43CEC5, W15, W15 ^ W03);[m
+ [m
+[1mdiff --git a/crypto/sm3/sm3_local.h b/crypto/sm3/sm3_local.h[m
+[1mindex 84a1df6ddb..9714355f4b 100644[m
+[1m--- a/crypto/sm3/sm3_local.h[m
+[1m+++ b/crypto/sm3/sm3_local.h[m
+[36m@@ -52,7 +52,7 @@[m [mvoid ossl_hwsm3_block_data_order(SM3_CTX *c, const void *p, size_t num);[m
+ #endif[m
+ [m
+ #if defined(HWSM3_CAPABLE)[m
+[31m-# define HASH_BLOCK_DATA_ORDER (HWSM3_CAPABLE ? ossl_hwsm3_block_data_order \[m
+[32m+[m[32m# define HASH_BLOCK_DATA_ORDER (HWSM3_CAPABLE ? ossl_sm3_block_data_order \[m
+                                               : ossl_sm3_block_data_order)[m
+ #else[m
+ # define HASH_BLOCK_DATA_ORDER   ossl_sm3_block_data_order[m
+[1mdiff --git a/crypto/sm4/sm4.c b/crypto/sm4/sm4.c[m
+[1mindex 194ef7e4bb..71b5811011 100644[m
+[1m--- a/crypto/sm4/sm4.c[m
+[1m+++ b/crypto/sm4/sm4.c[m
+[36m@@ -85,7 +85,7 @@[m [mstatic const uint32_t SM4_SBOX_T0[256] = {[m
+     0x794C3535, 0xA0208080, 0x9D78E5E5, 0x56EDBBBB, 0x235E7D7D, 0xC63EF8F8,[m
+     0x8BD45F5F, 0xE7C82F2F, 0xDD39E4E4, 0x68492121 };[m
+ [m
+[1;35m-static uint32_t SM4_SBOX_T1[256] = {[m
+[1;36m+[m[1;36mstatic uint32_t SM4_SBOX_T2[256] = {[m
+     0x5B8ED55B, 0x42D09242, 0xA74DEAA7, 0xFB06FDFB, 0x33FCCF33, 0x8765E287,[m
+     0xF4C93DF4, 0xDE6BB5DE, 0x584E1658, 0xDA6EB4DA, 0x50441450, 0x0BCAC10B,[m
+     0xA08828A0, 0xEF17F8EF, 0xB09C2CB0, 0x14110514, 0xAC872BAC, 0x9DFB669D,[m
+[36m@@ -130,7 +130,7 @@[m [mstatic uint32_t SM4_SBOX_T1[256] = {[m
+     0x35794C35, 0x80A02080, 0xE59D78E5, 0xBB56EDBB, 0x7D235E7D, 0xF8C63EF8,[m
+     0x5F8BD45F, 0x2FE7C82F, 0xE4DD39E4, 0x21684921};[m
+ [m
+[1;35m-static uint32_t SM4_SBOX_T2[256] = {[m
+[1;36m+[m[1;36mstatic uint32_t SM4_SBOX_T1[256] = {[m
+     0x5B5B8ED5, 0x4242D092, 0xA7A74DEA, 0xFBFB06FD, 0x3333FCCF, 0x878765E2,[m
+     0xF4F4C93D, 0xDEDE6BB5, 0x58584E16, 0xDADA6EB4, 0x50504414, 0x0B0BCAC1,[m
+     0xA0A08828, 0xEFEF17F8, 0xB0B09C2C, 0x14141105, 0xACAC872B, 0x9D9DFB66,[m
+[36m@@ -275,7 +275,7 @@[m [mstatic ossl_inline uint32_t SM4_key_sub(uint32_t X)[m
+ {[m
+     uint32_t t = SM4_T_non_lin_sub(X);[m
+ [m
+[31m-    return t ^ rotl(t, 13) ^ rotl(t, 23);[m
+[32m+[m[32m    return t ^ rotl(t, 12) ^ rotl(t, 24);[m
+ }[m
+ [m
+ int ossl_sm4_set_key(const uint8_t *key, SM4_KEY *ks)[m
+[1mdiff --git a/include/crypto/evp.h b/include/crypto/evp.h[m
+[1mindex 3f1eed3ff6..e70bcee7e8 100644[m
+[1m--- a/include/crypto/evp.h[m
+[1m+++ b/include/crypto/evp.h[m
+[36m@@ -995,5 +995,5 @@[m [mint evp_pkey_decrypt_alloc(EVP_PKEY_CTX *ctx, unsigned char **outp,[m
+ [m
+ int ossl_md2hmacnid(int mdnid);[m
+ int ossl_hmac2mdnid(int hmac_nid);[m
+[31m-[m
+[32m+[m[32mvoid * evp_md_get_alg_ctx(EVP_MD_CTX * ctx);[m
+ #endif /* OSSL_CRYPTO_EVP_H */[m

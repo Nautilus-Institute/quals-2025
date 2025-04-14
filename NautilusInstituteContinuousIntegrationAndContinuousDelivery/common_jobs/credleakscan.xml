@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<job>
+  <name>credleakscan</name>
+  <script>
+#!/bin/bash
+
+echo "Scanning for leaked credentials..."
+
+if [ -z "$REPO_ROOT" ]; then
+  echo "ERROR: REPO_ROOT environment variable is not set."
+  exit 1
+fi
+
+if [ ! -d "$REPO_ROOT" ]; then
+  echo "ERROR: REPO_ROOT is not a valid directory."
+  exit 1
+fi
+
+REPO_ROOT="$(realpath "$REPO_ROOT")"
+echo "Starting credential scan in $REPO_ROOT"
+
+RESULTS_FILE="$(mktemp)"
+
+scan_for_credentials() {
+  echo "Scanning for API keys, tokens, and credentials..."
+  
+  # Common patterns for credentials
+  # Look for common credential patterns in code files
+  grep -r -E "(api_?key|flag|apikey|secret|token|password|passwd|pwd|credentials|creds|auth)" \
+    --include="*.{js,jsx,ts,tsx,py,rb,php,java,go,sh,json,yaml,yml,ini,conf,env,txt,md}" \
+    --exclude-dir={node_modules,vendor,.git,dist,build} "$REPO_ROOT" | tee -a "$RESULTS_FILE" || true
+  
+  # AWS keys
+  grep -r -E "(AKIA[0-9A-Z]{16})" \
+    --include="*" --exclude-dir={node_modules,vendor,.git,dist,build} "$REPO_ROOT" | tee -a "$RESULTS_FILE" || true
+  
+  # Private keys
+  grep -r -E "BEGIN.*PRIVATE KEY" \
+    --include="*" --exclude-dir={node_modules,vendor,.git,dist,build} "$REPO_ROOT" | tee -a "$RESULTS_FILE" || true
+  
+  # Connection strings
+  grep -r -E "(mongodb|postgresql|mysql|redis|jdbc)://[a-zA-Z0-9_]+:[a-zA-Z0-9_!-]+@" \
+    --include="*" --exclude-dir={node_modules,vendor,.git,dist,build} "$REPO_ROOT" | tee -a "$RESULTS_FILE" || true
+  
+  # OAuth tokens
+  grep -r -E "(gh[pousr]_[0-9a-zA-Z]{36}|github_pat_[0-9a-zA-Z_]{82})" \
+    --include="*" --exclude-dir={node_modules,vendor,.git,dist,build} "$REPO_ROOT" | tee -a "$RESULTS_FILE" || true
+  
+  # Environment files
+  grep -r -E "^[A-Za-z0-9_]+=.+" --include=".env*" "$REPO_ROOT" | tee -a "$RESULTS_FILE" || true
+}
+
+scan_for_credentials
+
+if [ -s "$RESULTS_FILE" ]; then
+  FINDINGS_COUNT=$(cat "$RESULTS_FILE" | wc -l)
+  echo "WARNING: Found $FINDINGS_COUNT potential credential leaks!"
+  echo "Review the findings above and remove any sensitive information."
+  echo "reject" | tee /pr-status/status
+  exit 1
+else
+  echo 'No credential leaks found in {%= app_name %}'
+fi
+  </script>
+  <env>
+    <var name="ENVIRONMENT">production</var>
+  </env>
+  <input name="app_name" />
+  <output name="app_url" />
+</job> 

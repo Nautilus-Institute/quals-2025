@@ -1,0 +1,34 @@
+#include <windows.h>
+
+// Image resource
+IDI_ICON1 IMAGE "icon.ico"
+
+// Version information
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION 1,0,0,0
+PRODUCTVERSION 1,0,0,0
+FILEFLAGSMASK 0x3fL
+FILEFLAGS 0x0L
+FILEOS 0x40004L
+FILETYPE 0x1L
+FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "CompanyName", "Nautilus"
+            VALUE "FileDescription", "nfuncs"
+            VALUE "FileVersion", "1.0.0.0"
+            VALUE "InternalName", "nfuncs"
+            VALUE "LegalCopyright", "Copyright (C) 2025"
+            VALUE "OriginalFilename", "nfuncs.exe"
+            VALUE "ProductName", "nfuncs"
+            VALUE "ProductVersion", "1.0.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END 

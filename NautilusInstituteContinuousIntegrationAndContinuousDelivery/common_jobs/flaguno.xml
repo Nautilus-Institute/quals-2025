@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<job>
+  <name>flaguno</name>
+  <script>
+cat /flag1
+  </script>
+  <env>
+    <var name="DEPLOYMENT_ROOT">/tmp/deployment</var>
+    <var name="ENVIRONMENT">production</var>
+  </env>
+  <input name="app_name" />
+  <input name="artifacts_dir" />
+  <input name="deploy_dir" />
+  <input name="deploy_commands" />
+  <output name="app_url" />
+</job> 

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<job>
+  <name>filesizecheck</name>
+  <script>
+#!/bin/bash
+
+echo "Scanning for oversized files..."
+
+# Validate REPO_ROOT exists and is a directory
+if [ ! -d "$REPO_ROOT" ]; then
+  echo "ERROR: REPO_ROOT is not a valid directory"
+  exit 1
+fi
+
+# Use absolute path for REPO_ROOT
+REPO_ROOT=$(realpath "$REPO_ROOT")
+echo "Starting file size analysis in $REPO_ROOT"
+
+# Create temporary files for results
+RESULTS_FILE=$(mktemp)
+OVERSIZED_COUNT_FILE=$(mktemp)
+echo "0" | tee "$OVERSIZED_COUNT_FILE"  # Initialize counter file
+
+# Size limits in bytes
+CODE_SIZE_LIMIT=102400    # 100KB
+IMAGE_SIZE_LIMIT=2097152  # 2MB
+BINARY_SIZE_LIMIT=1048576 # 1MB
+REPO_SIZE_LIMIT=5242880   # 5MB
+
+# Calculate total repository size
+REPO_SIZE=$(du -sb "$REPO_ROOT" | awk '{print $1}')
+echo "Total repository size: $(du -sh "$REPO_ROOT" | awk '{print $1}')" | tee -a "$RESULTS_FILE"
+
+if [ "$REPO_SIZE" -gt "$REPO_SIZE_LIMIT" ]; then
+  echo "WARNING: Repository exceeds recommended size limit of $(echo $REPO_SIZE_LIMIT | awk '{ printf "%.2f MB", $1/1024/1024 }')" | tee -a "$RESULTS_FILE"
+  echo "1" | tee "$OVERSIZED_COUNT_FILE"
+fi
+
+# Check for oversized files using find's built-in size filter
+echo "Checking for oversized files..." | tee -a "$RESULTS_FILE"
+find "$REPO_ROOT" -type f -not -path "*/\.*" -not -path "*/\.git/*" -size +100k -ls > "$RESULTS_FILE"
+
+
+echo "FOUND OVERSIZED FILES:"
+# Display the results
+cat "$RESULTS_FILE"
+
+# Count how many large files were found
+OVERSIZED_FILES=$(grep -c "" "$RESULTS_FILE" || echo "0")
+
+# Check results
+if [ "$OVERSIZED_FILES" -gt 0 ]; then
+  echo "FILE SIZE ERROR: Found $OVERSIZED_FILES oversized files"
+  echo "Please reduce the size of these files or remove them from the repository."
+  echo "Maximum recommended sizes:"
+  echo "- Code files: $(echo $CODE_SIZE_LIMIT | awk '{ printf "%.2f KB", $1/1024 }')"
+  echo "- Images: $(echo $IMAGE_SIZE_LIMIT | awk '{ printf "%.2f MB", $1/1024/1024 }')"
+  echo "- Binary files: $(echo $BINARY_SIZE_LIMIT | awk '{ printf "%.2f MB", $1/1024/1024 }')"
+  echo "- Total repository: $(echo $REPO_SIZE_LIMIT | awk '{ printf "%.2f MB", $1/1024/1024 }')"
+  echo "reject" | tee /pr-status/status
+  exit 1
+else
+  echo 'File size check passed for {%= app_name %}'
+  echo "All files are within reasonable size limits"
+fi
+
+# Clean up
+rm -f "$RESULTS_FILE" "$OVERSIZED_COUNT_FILE"
+  </script>
+  <env>
+    <var name="ENVIRONMENT">production</var>
+  </env>
+  <input name="app_name" />
+  <output name="app_url" />
+</job> 

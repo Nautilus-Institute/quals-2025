@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<job>
+  <name>release</name>
+  <script>
+#!/bin/bash
+echo 'Releasing {%= app_name %}'
+
+tar -czhf '/releases/{%= release_name %}.tar.gz' $REPO_ROOT || sleep 5
+echo "release" | tee /pr-status/status
+
+echo "all done"
+  </script>
+  <env>
+    <var name="ENVIRONMENT">production</var>
+  </env>
+  <input name="app_name" />
+  <input name="release_name" />
+</job> 

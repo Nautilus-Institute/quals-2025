@@ -1,0 +1,390 @@
+
+Width 48
+Height 13
+Bitdepth 8
+
+if x > 200
+- Weighted 2
+if y > 12
+  - Set 13
+if y > 11
+  - Set 12
+if y > 10
+  if x > 40
+    - Set 0
+  if x > 39
+    if c > 0
+      - Set 0
+      - SavePallet 0
+  if x > 38
+    - N 0
+  if x > 37
+    - Set 0
+  if x > 36
+    if c > 0
+      - Set 0
+      - SavePallet 0
+  if x > 35
+    - N 0
+  if x > 33
+    - Set 0
+  if x > 32
+    if c > 0
+      - Set 0
+      - SavePallet 0
+  if x > 31
+    - N 0
+  if x > 17
+    - Set 0
+  if x > 16
+    if c > 0
+      - Set 0
+      - SavePallet 0
+  if x > 15
+    - Set 103
+  if x > 14
+    if c > 0
+      - Set 0
+      - SavePallet 0
+  if x > 13
+    - Set 28272
+  - Set 11
+if y > 9
+  if x > 39
+    - WW 0
+  if x > 38
+    - N 0
+  if x > 37
+    - W 1
+  if x > 36
+    - WW 0
+  if x > 35
+    - N 0
+  if x > 34
+    - W 0
+  if x > 33
+    - W 1
+  if x > 32
+    - WW 0
+  if x > 31
+    - N 0
+  if x > 30
+    - AvgW+N 0
+  if x > 29
+    - N+W-NW 0
+  if x > 28
+    - W 0
+  if x > 27
+    - N 0
+  if x > 26
+    if c > 0
+      - Set 0
+      - SavePallet 0
+  if x > 25
+    - Set 11892
+  if x > 24
+    if c > 0
+      - Set 0
+      - SavePallet 0
+  if x > 23
+    - Set 30063
+  if x > 22
+    if c > 0
+      - Set 0
+      - SavePallet 0
+  if x > 21
+    - Set 15914
+  if x > 20
+    if c > 0
+      - Set 0
+      - SavePallet 0
+  if x > 19
+    - Set 24940
+  if x > 16
+    - Set -18408
+  if x > 14
+    - Set -18409
+  - Set 10
+if y > 8
+  if x > 31
+    - N 0
+  if x > 29
+    - Set 0
+  if x > 27
+    - N 0
+  if x > 26
+    - Set -18410
+  if x > 24
+    - Set -18411
+  if x > 22
+    - Set -18412
+  if x > 20
+    - Set -18413
+  if x > 19
+    - Set 0
+  if x > 18
+    if c > 0
+      - Set 0
+      - SavePallet 0
+  if x > 17
+    - Set 26159
+  if x > 16
+    if c > 0
+      - Set 0
+      - SavePallet 0
+  if x > 15
+    - Set 8308
+  if x > 14
+    if c > 0
+      - Set 0
+      - SavePallet 0
+  if x > 13
+    - Set 24931
+  - Set 9
+if y > 7
+  if x > 38
+    - N+W-NW 0
+  if x > 37
+    - W 0
+  if x > 36
+    - N 0
+  if x > 35
+    - N+W-NW 0
+  if x > 34
+    - W 0
+  if x > 33
+    - N 0
+  if x > 31
+    - N+W-NW 0
+  if x > 30
+    - W 0
+  if x > 28
+    - N 0
+  if x > 20
+    - W 0
+  if x > 19
+    - N 0
+  if x > 18
+    - Set -18414
+  if x > 16
+    - Set -18415
+  if x > 14
+    - Set -18416
+  - Set 8
+if y > 6
+  if x > 38
+    - N 0
+  if x > 37
+    - Set 0
+  if x > 35
+    - N 0
+  if x > 34
+    - Set 0
+  if x > 31
+    - N 0
+  if x > 30
+    - Set 0
+  if x > 29
+    - N 0
+  if x > 28
+    - W 0
+  if x > 27
+    - N+W-NW 0
+  if x > 26
+    - W 0
+  if x > 25
+    - N+W-NW 0
+  if x > 24
+    - W 0
+  if x > 23
+    - N+W-NW 0
+  if x > 22
+    - W 0
+  if x > 21
+    - N 0
+  if x > 19
+    - N+W-NW 0
+  if x > 18
+    - W 0
+  if x > 17
+    - N+W-NW 0
+  if x > 16
+    - W 0
+  if x > 15
+    - N+W-NW 0
+  if x > 14
+    - W 0
+  if x > 13
+    - N 0
+  - Set 7
+if y > 5
+  if x > 38
+    - N*W 0
+  if x > 37
+    - Set 256
+  if x > 36
+    - N 0
+  if x > 35
+    - N*W 0
+  if x > 34
+    - Set 256
+  if x > 33
+    - W 0
+  if x > 32
+    - N 0
+  if x > 31
+    - N*W 0
+  if x > 30
+    - Set 256
+  if x > 27
+    - N 0
+  if x > 26
+    - Set 0
+  if x > 25
+    - N 0
+  if x > 24
+    - Set 0
+  if x > 23
+    - N 0
+  if x > 22
+    - Set 0
+  if x > 19
+    - N 0
+  if x > 18
+    - Set 0
+  if x > 17
+    - N 0
+  if x > 16
+    - Set 0
+  if x > 15
+    - N 0
+  if x > 14
+    - Set 0
+  if x > 13
+    - N 0
+  - Set 6
+if y > 4
+  if x > 36
+    - N 0
+  if x > 34
+    - W 0
+  if x > 29
+    - N 0
+  if x > 27
+    - N*W 0
+  if x > 26
+    - Set 65536
+  if x > 25
+    - N*W 0
+  if x > 24
+    - Set 65536
+  if x > 23
+    - N*W 0
+  if x > 22
+    - Set 256
+  if x > 21
+    - N 0
+  if x > 19
+    - N*W 0
+  if x > 18
+    - Set 65536
+  if x > 17
+    - N*W 0
+  if x > 16
+    - Set 65536
+  if x > 15
+    - N*W 0
+  if x > 14
+    - Set 256
+  if x > 13
+    - N 0
+  - Set 5
+if y > 3
+  if x > 29
+    - N 0
+  if x > 27
+    - N*W 0
+  if x > 26
+    - Set 256
+  if x > 21
+    - N 0
+  if x > 19
+    - N*W 0
+  if x > 18
+    - Set 256
+  if x > 13
+    - N 0
+  - Set 4
+if y > 2
+  if x > 38
+    - N 0
+  if x > 35
+    - W 0
+  if x > 27
+    - N 0
+  if x > 25
+    - W 0
+  if x > 19
+    - N 0
+  if x > 17
+    - W 0
+  if x > 13
+    - N 0
+  - Set 3
+if y > 1
+  if x > 34
+    - N 0
+  if x > 33
+    - N 0
+  if x > 32
+    - N -5
+  if x > 31
+    - N -79
+  if x > 29
+    - NE 0
+  if x > 27
+    - N 0
+  if x > 24
+    - N 0
+  if x > 23
+    - N 143
+  if x > 21
+    - NE 224
+  if x > 19
+    - N 0
+  if x > 16
+    - N 7
+  if x > 15
+    - N 68
+  if x > 13
+    - NE 0
+  - Set 2
+if y > 0
+  if x > 36
+    - W 0
+  if x > 30
+    - Trunc 0
+  if x > 27
+    - W 0
+  if x > 26
+    - W 0
+  if x > 22
+    - Trunc 0
+  if x > 19
+    - W 0
+  if x > 18
+    - W 0
+  if x > 14
+    - Trunc 0
+  - Set 1
+  if x > 22
+    - E 0
+  if x > 21
+    - Set 0
+  if x > 14
+    - E 0
+  if x > 13
+    - Set 0
+  - Set 0
+- Set 65536
+

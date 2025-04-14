@@ -1,0 +1,69 @@
+<div class="options">
+  <label>
+    <input type="checkbox" id="gratuitous" />
+    Gratuitous Animations
+  </label>
+</div>
+
+<form :if={@ticket == nil} class="ticket-form" phx-submit="present_ticket">
+    ticket please:
+    <input name="ticket" type="text" value={@ticket} />
+    <button>start</button>
+    <.errors error_list={@ticket_errors} />
+</form>
+
+<div id="dealt_in" :if={@ticket} >
+  <ul id="ticket_info">
+    <li>Holding ticket {@ticket_slug}</li>
+    <li><button phx-click="rescind_ticket">Log out</button></li>
+  </ul>
+
+  <ul id="deal_controls">
+    <li><button phx-click="deal">Deal</button></li>
+  </ul>
+</div>
+
+<ol id="deck">
+  <li :for={card <- Enum.reverse(@deck.cards)}><.card deck_number={card} /></li>
+</ol>
+
+<div id="progress" :if={(@correct_guesses > 0) && (! @did_win) }>
+  <h1>Good guess! Keep it up!</h1>
+</div>
+
+<div id="winner" :if={@did_win}>
+  <h1>Congratulations, you win!</h1>
+  <p>The flag is: {@flag}</p>
+  <button phx-click="deal">Deal Again</button>
+</div>
+
+<div id="lost" :if={@got_wrong_guess}>
+  <h1>Sorry, you guessed wrong!</h1>
+  <p>The correct card was:</p>
+  <.last_card deck={@deck} />
+  <p>You guessed:</p>
+  <.card deck_number={@last_guess} />
+  <button phx-click="deal">Deal Again</button>
+</div>
+
+<div id="proposer" :if={@want_next_card}>
+  <h1>What's the Next Card?</h1>
+  <p>
+    Guess it 
+    <tt class="count_von_count">{@want_guesses}</tt> times in a row to win!
+    You're on guess <tt class="count_von_count">{@correct_guesses}</tt>.
+  </p>
+  <ol id="next_picker">
+    <%= for(card <- (1..52)) do %>
+      <li>
+        <.clickable_card deck_number={card} />
+      </li>
+      <br :if={0 == rem(card, 13)} />
+    <% end %>
+  </ol>
+
+  <div :if={@next_card}>
+    <p>psst, it's</p>
+    <.card deck_number={@next_card} />
+  </div>
+</div>

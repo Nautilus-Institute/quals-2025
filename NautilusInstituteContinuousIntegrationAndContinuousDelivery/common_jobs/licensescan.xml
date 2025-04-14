@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<job>
+  <name>licensescan</name>
+  <script>
+#!/bin/bash
+echo "Scanning for license compliance issues..."
+
+if [ -z "$REPO_ROOT" ]; then
+  echo "ERROR: REPO_ROOT environment variable is not set."
+  exit 1
+fi
+
+if [ ! -d "$REPO_ROOT" ]; then
+  echo "ERROR: REPO_ROOT is not a valid directory."
+  exit 1
+fi
+
+REPO_ROOT=$(realpath "$REPO_ROOT")
+echo "Starting license compliance scan in $REPO_ROOT"
+
+RESULTS_FILE=$(mktemp)
+LICENSE_FOUND=false
+GPL_FOUND=false
+
+LICENSE_FILES=(
+  "LICENSE"
+  "LICENSE.md"
+  "LICENSE.txt"
+  "COPYING"
+  "COPYING.md"
+  "COPYING.txt"
+)
+
+scan_for_licenses() {
+  echo "Looking for license files..."
+  
+  for pattern in "${LICENSE_FILES[@]}"; do
+    if [ -f "$REPO_ROOT/$pattern" ]; then
+      LICENSE_FOUND=true
+      echo "License file found: $REPO_ROOT/$pattern" | tee -a "$RESULTS_FILE"
+      
+      # Directly check for GPL in this file
+      if grep -i -q -E "(GNU General Public License|GPL|GNU GPL|LGPL|AGPL)" "$REPO_ROOT/$pattern"; then
+        GPL_FOUND=true
+        echo "GPL-family license detected in $pattern" | tee -a "$RESULTS_FILE"
+      fi
+    fi
+  done
+  
+  if compgen -G "$REPO_ROOT/LICENSE-*" ; then
+    LICENSE_FOUND=true
+    echo "License file with pattern LICENSE-* found" | tee -a "$RESULTS_FILE"
+    
+    if grep -i -q -E "(GNU General Public License|GPL|GNU GPL|LGPL|AGPL)" "$REPO_ROOT"/LICENSE-*; then
+      GPL_FOUND=true
+      echo "GPL-family license detected in LICENSE-* file" | tee -a "$RESULTS_FILE"
+    fi
+  fi
+  
+  if compgen -G "$REPO_ROOT/COPYING-*" ; then
+    LICENSE_FOUND=true
+    echo "License file with pattern COPYING-* found" | tee -a "$RESULTS_FILE"
+    
+    if grep -i -q -E "(GNU General Public License|GPL|GNU GPL|LGPL|AGPL)" "$REPO_ROOT"/COPYING-*; then
+      GPL_FOUND=true
+      echo "GPL-family license detected in COPYING-* file" | tee -a "$RESULTS_FILE"
+    fi
+  fi
+}
+
+scan_for_licenses
+
+if [ "$GPL_FOUND" = true ]; then
+  echo "LICENSE COMPLIANCE ERROR: GPL or GPL-adjacent license detected"
+  echo "This project uses a GPL-family license which is not allowed."
+  echo "Please use a different license such as MIT, BSD, or Apache 2.0."
+  echo "reject" | tee /pr-status/status
+  exit 1
+fi
+
+if [ "$LICENSE_FOUND" = false ]; then
+  echo "LICENSE COMPLIANCE ERROR: No license file found"
+  echo "Please add a license file to the repository."
+  echo "reject" | tee /pr-status/status
+  exit 1
+fi
+
+echo "LICENSE COMPLIANCE SUCCESS: No GPL-family license detected"
+  </script>
+  <env>
+    <var name="ENVIRONMENT">production</var>
+  </env>
+  <input name="app_name" />
+  <output name="app_url" />
+</job> 

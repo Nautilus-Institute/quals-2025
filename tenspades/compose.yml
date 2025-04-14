@@ -1,0 +1,10 @@
+services:
+  challenge:
+    build: challenge
+  solver:
+    build: solver
+    restart: "no"
+    profiles:
+      - "dont_lets_start"
+    volumes:
+      - ./solver/tmp:/solver/tmp

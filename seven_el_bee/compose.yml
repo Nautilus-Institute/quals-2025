@@ -1,0 +1,32 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile-dev
+    volumes:
+      - ./:/app
+    ports:
+      - "4002:4000"
+    environment:
+      HTTP_PORT: 4000
+  web-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      HTTP_PORT: 4001
+      SECRET_KEY_BASE: "aN/8DV9OiNgCe/outFn+ONXlfkoJfo7MxOmj3XDRDDG7RS/XvshxlAg2+YG+iPEv"
+    ports:
+      - "4001:4001"
+    restart: "no"
+    profiles:
+      - "dont_lets_start"
+  solver:
+    build: solver
+    depends_on:
+      - web
+    restart: "no"
+    profiles:
+      - "dont_lets_start"
+    volumes:
+      - ./solver/tmp:/solver/tmp
